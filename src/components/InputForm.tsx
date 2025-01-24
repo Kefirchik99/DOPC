@@ -1,132 +1,87 @@
-import { useState } from 'react';
-import { Container, Alert, Form } from 'react-bootstrap';
-import {
-  validateForm,
-  getUserLocation,
-  calculateDistance,
-  calculateDeliveryFee,
-  getSuggestedCoordinates,
-  formatDistance,
-} from '../utils';
-import type { PriceBreakdown, VenueSlug } from '../utils';
-import { fetchVenueStaticData, fetchVenueDynamicData } from '../services';
-import FormFields from './FormFields';
-import PriceBreakdownComponent from './PriceBreakdownComponent';
-import './InputForm.scss';
+import { useState, useEffect } from "react";
+import { Container } from "react-bootstrap";
+import { useDeliveryCalculator } from "../hooks/useDeliveryCalculator";
+import FormFields from "./FormFields";
+import PriceBreakdownComponent from "./PriceBreakdownComponent";
+import WarningModal from "./modals/WarningModal";
+import ErrorModal from "./modals/ErrorModal";
+import type { VenueSlug } from "../utils";
+import "./InputForm.scss";
 
 const InputForm = () => {
   const [venueSlug, setVenueSlug] = useState<VenueSlug | ''>('');
   const [cartValue, setCartValue] = useState<number | ''>('');
-  const [latitude, setLatitude] = useState('');
-  const [longitude, setLongitude] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [warning, setWarning] = useState<string | null>(null);
-  const [priceBreakdown, setPriceBreakdown] = useState<PriceBreakdown | null>(null);
+  const [latitude, setLatitude] = useState<string>('');
+  const [longitude, setLongitude] = useState<string>('');
+  const [isWarningVisible, setIsWarningVisible] = useState<boolean>(false);
+  const [isErrorVisible, setIsErrorVisible] = useState<boolean>(false);
 
-  const handleCalculatePrice = async () => {
-    const validationError = validateForm({
-      venueSlug,
-      cartValue: cartValue.toString(),
-      latitude,
-      longitude,
-    });
+  const {
+    calculatePrice,
+    priceBreakdown,
+    warningMessage,
+    errorMessage,
+    setWarningMessage,
+    setErrorMessage,
+  } = useDeliveryCalculator({
+    venueSlug,
+    cartValue,
+    latitude,
+    longitude,
+  });
 
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
-    setError(null);
+  useEffect(() => {
+    setIsWarningVisible(!!warningMessage);
+  }, [warningMessage]);
 
-    try {
-      const staticData = await fetchVenueStaticData(venueSlug);
-      const dynamicData = await fetchVenueDynamicData(venueSlug);
-
-      const venueLocation = staticData.venue_raw.location.coordinates;
-      const orderMinimum = dynamicData.venue_raw.delivery_specs.order_minimum_no_surcharge;
-      const basePrice = dynamicData.venue_raw.delivery_specs.delivery_pricing.base_price;
-      const distanceRanges = dynamicData.venue_raw.delivery_specs.delivery_pricing.distance_ranges;
-
-      const deliveryDistance = calculateDistance(
-        Number(latitude),
-        Number(longitude),
-        venueLocation[1],
-        venueLocation[0]
-      );
-
-      if (deliveryDistance > distanceRanges[distanceRanges.length - 1].min) {
-        setError(
-          `Delivery not available for this distance. Your location is ${formatDistance(
-            deliveryDistance
-          )} away, but maximum delivery distance is ${formatDistance(
-            distanceRanges[distanceRanges.length - 1].min
-          )}.`
-        );
-        return;
-      }
-
-      const deliveryFee = calculateDeliveryFee(deliveryDistance, distanceRanges, basePrice);
-      const smallOrderSurcharge = Math.max(0, orderMinimum - Number(cartValue));
-      const totalPrice = Number(cartValue) + deliveryFee + smallOrderSurcharge;
-
-      setPriceBreakdown({
-        cartValue: Number(cartValue),
-        smallOrderSurcharge,
-        deliveryFee,
-        deliveryDistance,
-        totalPrice,
-      });
-    } catch (err) {
-      setError('Failed to fetch venue data. Please check the venue slug and try again.');
-      console.error('API Error:', err);
-    }
-  };
+  useEffect(() => {
+    setIsErrorVisible(!!errorMessage);
+  }, [errorMessage]);
 
   const handleGetLocation = () => {
     if (!venueSlug) {
-      setError('Please select a venue first!');
+      setErrorMessage("Please select a valid venue slug!");
       return;
     }
 
-    const suggestedCoords = getSuggestedCoordinates(venueSlug);
-    if (suggestedCoords) {
-      setLatitude(suggestedCoords.latitude.toString());
-      setLongitude(suggestedCoords.longitude.toString());
-      setWarning('Using test coordinates within delivery range.');
-      return;
-    }
-
-    getUserLocation(
+    navigator.geolocation.getCurrentPosition(
       (position) => {
         setLatitude(position.coords.latitude.toString());
         setLongitude(position.coords.longitude.toString());
+        setWarningMessage(null);
       },
-      (errorMessage) => {
-        setError(errorMessage);
+      () => {
+        setErrorMessage("Failed to retrieve your location. Please try again.");
       }
     );
   };
 
+  const handleVenueSlugChange = (value: string) => {
+    const validSlugs: VenueSlug[] = [
+      "home-assignment-venue-tallinn",
+      "home-assignment-venue-helsinki",
+    ];
+    if (validSlugs.includes(value as VenueSlug)) {
+      setVenueSlug(value as VenueSlug);
+    } else {
+      setVenueSlug('');
+      setErrorMessage("Invalid venue slug. Please select a valid venue.");
+    }
+  };
+
   return (
     <Container className="input-form mt-4">
-      <img src="/wolt-logo-white.png" alt="Wolt Logo" className="input-form__logo" />
-      <Form className="input-form__form">
+      <img
+        src="/wolt-logo-white.png"
+        alt="Wolt Logo"
+        className="input-form__logo"
+      />
+      <div className="input-form__form">
         <h3 className="input-form__heading">Delivery Order Price Calculator</h3>
-
-        {error && (
-          <Alert variant="danger" role="alert" aria-live="assertive" className="input-form__error">
-            {error}
-          </Alert>
-        )}
-
-        {warning && (
-          <Alert variant="warning" role="alert" aria-live="polite" className="input-form__warning">
-            {warning}
-          </Alert>
-        )}
 
         <FormFields
           venueSlug={venueSlug}
-          setVenueSlug={setVenueSlug}
+          setVenueSlug={handleVenueSlugChange}
           cartValue={cartValue}
           setCartValue={setCartValue}
           latitude={latitude}
@@ -134,7 +89,7 @@ const InputForm = () => {
           longitude={longitude}
           setLongitude={setLongitude}
           handleGetLocation={handleGetLocation}
-          handleCalculatePrice={handleCalculatePrice}
+          handleCalculatePrice={calculatePrice}
         />
 
         <PriceBreakdownComponent
@@ -148,7 +103,19 @@ const InputForm = () => {
             }
           }
         />
-      </Form>
+      </div>
+
+      <WarningModal
+        show={isWarningVisible}
+        onClose={() => setWarningMessage(null)}
+        message={warningMessage}
+      />
+
+      <ErrorModal
+        show={isErrorVisible}
+        onClose={() => setErrorMessage(null)}
+        message={errorMessage}
+      />
     </Container>
   );
 };
