@@ -1,11 +1,11 @@
-import { Form, Button } from 'react-bootstrap';
-import type { VenueSlug } from '../utils';
+import { Form, Button } from "react-bootstrap";
+import type { VenueSlug } from "../utils";
 
 interface FormFieldsProps {
-  venueSlug: VenueSlug | '';
-  setVenueSlug: (value: VenueSlug | '') => void;
-  cartValue: number | '';
-  setCartValue: (value: number | '') => void;
+  venueSlug: VenueSlug | "";
+  setVenueSlug: (value: VenueSlug | "") => void;
+  cartValue: number | "";
+  setCartValue: (value: number | "") => void;
   latitude: string;
   setLatitude: (value: string) => void;
   longitude: string;
@@ -28,10 +28,10 @@ const FormFields: React.FC<FormFieldsProps> = ({
 }) => {
   const handleVenueSlugChange = (value: string) => {
     const validSlugs: VenueSlug[] = [
-      'home-assignment-venue-tallinn',
-      'home-assignment-venue-helsinki',
+      "home-assignment-venue-tallinn",
+      "home-assignment-venue-helsinki",
     ];
-    setVenueSlug(validSlugs.includes(value as VenueSlug) ? (value as VenueSlug) : '');
+    setVenueSlug(validSlugs.includes(value as VenueSlug) ? (value as VenueSlug) : "");
   };
 
   return (
@@ -39,9 +39,8 @@ const FormFields: React.FC<FormFieldsProps> = ({
       <h2>Details</h2>
 
       <Form.Group className="mb-3" controlId="venueSlug">
-        <Form.Label htmlFor="venueSlug">Venue Slug</Form.Label>
+        <Form.Label>Venue Slug</Form.Label>
         <Form.Control
-          id="venueSlug"
           type="text"
           placeholder="Enter venue slug"
           value={venueSlug}
@@ -52,18 +51,17 @@ const FormFields: React.FC<FormFieldsProps> = ({
           data-test-id="venueSlug"
         />
         <Form.Text id="venueSlugHelp" className="text-muted">
-          Example "home-assignment-venue-tallinn"
+          Example <i>home-assignment-venue-tallinn</i>
         </Form.Text>
       </Form.Group>
 
       <Form.Group className="mb-3" controlId="cartValue">
-        <Form.Label htmlFor="cartValue">Cart Value (EUR)</Form.Label>
+        <Form.Label>Cart Value (EUR)</Form.Label>
         <Form.Control
-          id="cartValue"
           type="number"
           placeholder="Enter the cart value"
-          value={cartValue === '' ? '' : cartValue.toString()}
-          onChange={(e) => setCartValue(Number(e.target.value) || '')}
+          value={cartValue === "" ? "" : cartValue.toString()}
+          onChange={(e) => setCartValue(Number(e.target.value) || "")}
           required
           aria-label="Enter cart value in euros"
           data-test-id="cartValue"
@@ -71,9 +69,8 @@ const FormFields: React.FC<FormFieldsProps> = ({
       </Form.Group>
 
       <Form.Group className="mb-3" controlId="latitude">
-        <Form.Label htmlFor="latitude">User Latitude</Form.Label>
+        <Form.Label>User Latitude</Form.Label>
         <Form.Control
-          id="latitude"
           type="number"
           placeholder="Enter your latitude"
           value={latitude}
@@ -84,14 +81,13 @@ const FormFields: React.FC<FormFieldsProps> = ({
           data-test-id="userLatitude"
         />
         <Form.Text id="latitudeHelp" className="text-muted">
-          Example 59.433714
+          Example <i>59.433714</i>
         </Form.Text>
       </Form.Group>
 
       <Form.Group className="mb-3" controlId="longitude">
-        <Form.Label htmlFor="longitude">User Longitude</Form.Label>
+        <Form.Label>User Longitude</Form.Label>
         <Form.Control
-          id="longitude"
           type="number"
           placeholder="Enter your longitude"
           value={longitude}
@@ -102,7 +98,7 @@ const FormFields: React.FC<FormFieldsProps> = ({
           data-test-id="userLongitude"
         />
         <Form.Text id="longitudeHelp" className="text-muted">
-          Example 24.743960
+          Example <i>24.743960</i>
         </Form.Text>
       </Form.Group>
 
