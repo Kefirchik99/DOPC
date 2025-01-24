@@ -1,4 +1,3 @@
-// InputForm.test.tsx
 import { render, screen, fireEvent } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import InputForm from "../components/InputForm";
@@ -8,7 +7,6 @@ describe("InputForm", () => {
     render(<InputForm />);
     fireEvent.click(screen.getByText("Calculate Delivery Price"));
 
-    // Wait for modal content to appear
     const modalTitle = await screen.findByText("Whoopsie");
     expect(modalTitle).toBeInTheDocument();
 

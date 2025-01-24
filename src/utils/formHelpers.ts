@@ -56,7 +56,7 @@ export type DistanceRange = {
   
   export const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
     const toRad = (value: number) => (value * Math.PI) / 180;
-    const R = 6371e3; // Earth's radius in meters
+    const R = 6371e3; // Earth radius in m
     const φ1 = toRad(lat1);
     const φ2 = toRad(lat2);
     const Δφ = toRad(lat2 - lat1);
